@@ -6,6 +6,7 @@
 #include "core/paint/BoxPainter.h"
 
 #include "core/HTMLNames.h"
+#include "core/frame/FrameHost.h"
 #include "core/frame/Settings.h"
 #include "core/html/HTMLFrameOwnerElement.h"
 #include "core/layout/ImageQualityController.h"
@@ -16,6 +17,7 @@
 #include "core/layout/LayoutTheme.h"
 #include "core/layout/LayoutView.h"
 #include "core/layout/compositing/CompositedDeprecatedPaintLayerMapping.h"
+#include "core/page/Chrome.h"
 #include "core/style/BorderEdge.h"
 #include "core/style/ShadowList.h"
 #include "core/paint/BackgroundImageGeometry.h"
@@ -30,6 +32,7 @@
 #include "platform/geometry/LayoutRectOutsets.h"
 #include "platform/graphics/GraphicsContextStateSaver.h"
 #include "platform/graphics/paint/CompositingDisplayItem.h"
+#include "public/platform/WebScreenInfo.h"
 
 namespace blink {
 
@@ -1680,8 +1683,34 @@ void BoxPainter::paintBorder(LayoutBoxModelObject& obj, const PaintInfo& info, c
     // rectangular to improve performance.
     if (haveAllSolidEdges && outerBorder.isRounded() && allCornersClippedOut(outerBorder, info.rect))
         outerBorder.setRadii(FloatRoundedRect::Radii());
+    
+    // Clip the box area and draw the round border inside it.
+    LocalFrame& frame = obj.view()->frameView()->frame();
+    const WebScreenInfo& screenInfo = frame.host()->chrome().screenInfo();
+    if (style.borderBoundary() == DISPLAY && screenInfo.deviceRadius > 0) {
+        graphicsContext->save();
+        graphicsContext->clipRect(outerBorder.rect());
+        graphicsContext->setStrokeColor(firstEdge.color);
+        graphicsContext->setStrokeThickness(firstEdge.width);
+        // screenInfo.rect has the half size of the screen on Android Wear(LG Urbane)
+        // so instead of using screenInfo.rect, we use obj.viewRect().
+        FloatRect strokeRect(FloatRect(0, 0, obj.viewRect().width().toFloat(), obj.viewRect().height().toFloat()));
+        strokeRect.inflate(-firstEdge.width / 2);
+        // FIXME:  Consider the radius of a quarter ellipse in terms of the shape of the corner of the outer screen edge.
+        graphicsContext->strokeEllipse(strokeRect);
+        graphicsContext->restore();  
 
-    if (paintBorderFastPath(graphicsContext, borderInfo, rect, outerBorder, innerBorder))
+        // Clip the display area and draw the box inside it.
+        graphicsContext->save();
+        SkPath path;
+        SkRect rectClip;
+        rectClip.setXYWH(0, 0, obj.viewRect().width().toFloat(), obj.viewRect().height().toFloat());
+        // FIXME:  Consider the radius of a quarter ellipse in terms of the shape of the corner of the outer screen edge.
+        path.arcTo(rectClip, 0, 355, true);
+        graphicsContext->clipPath(path, AntiAliased);
+   }
+
+   if (paintBorderFastPath(graphicsContext, borderInfo, rect, outerBorder, innerBorder))
         return;
 
     bool clipToOuterBorder = outerBorder.isRounded();
@@ -1706,6 +1735,9 @@ void BoxPainter::paintBorder(LayoutBoxModelObject& obj, const PaintInfo& info, c
         paintBorderSides(graphicsContext, style, outerBorder, innerBorder, borderInfo.edges,
         borderInfo.visibleEdgeSet, bleedAvoidance, includeLogicalLeftEdge, includeLogicalRightEdge, antialias);
     }
+
+    if (style.borderBoundary() == DISPLAY && screenInfo.deviceRadius > 0)
+        graphicsContext->restore();
 }
 
 static inline bool includesAdjacentEdges(BorderEdgeFlags flags)

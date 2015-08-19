@@ -220,6 +220,7 @@ private:
     bool parseBorderImageWidth(RefPtrWillBeRawPtr<CSSPrimitiveValue>&);
     bool parseBorderImageOutset(RefPtrWillBeRawPtr<CSSPrimitiveValue>&);
     bool parseBorderRadius(CSSPropertyID, bool important);
+    PassRefPtrWillBeRawPtr<CSSValue> parseBorderBoundary();
 
     PassRefPtrWillBeRawPtr<CSSValue> parseReflect();
 

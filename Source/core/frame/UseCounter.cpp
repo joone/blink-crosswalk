@@ -532,6 +532,7 @@ int UseCounter::mapCSSPropertyIdToCSSSampleIdForHistogram(int id)
     case CSSPropertyAliasWebkitShapeImageThreshold: return 496;
     case CSSPropertyAliasWebkitShapeMargin: return 497;
     case CSSPropertyAliasWebkitShapeOutside: return 498;
+    case CSSPropertyBorderBoundary: return 499;
 
     // 1. Add new features above this line (don't change the assigned numbers of the existing
     // items).

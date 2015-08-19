@@ -43,6 +43,7 @@ void HTMLImageFallbackHelper::createAltTextShadowTree(Element& element)
     container->setInlineStyleProperty(CSSPropertyBorderWidth, 1, CSSPrimitiveValue::CSS_PX);
     container->setInlineStyleProperty(CSSPropertyBorderStyle, CSSValueSolid);
     container->setInlineStyleProperty(CSSPropertyBorderColor, CSSValueSilver);
+    container->setInlineStyleProperty(CSSPropertyBorderBoundary, CSSValueNone);
     container->setInlineStyleProperty(CSSPropertyDisplay, CSSValueInlineBlock);
     container->setInlineStyleProperty(CSSPropertyBoxSizing, CSSValueBorderBox);
     container->setInlineStyleProperty(CSSPropertyPadding, 1, CSSPrimitiveValue::CSS_PX);

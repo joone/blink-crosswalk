@@ -85,7 +85,8 @@ struct WebScreenInfo {
         , depthPerComponent(0)
         , isMonochrome(false)
         , orientationType(WebScreenOrientationUndefined)
-        , orientationAngle(0) { }
+        , orientationAngle(0)
+        , deviceRadius(0) { }
 
     bool operator==(const WebScreenInfo& other) const
     {
